@@ -1,0 +1,25 @@
+appId: com.jurisfinance.app
+productName: JurisFinance
+directories:
+  buildResources: assets
+  output: dist-electron/release
+files:
+  - from: dist-electron
+    to: .
+  - from: dist/public
+    to: resources/app
+
+win:
+  target:
+    - nsis
+    - portable
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: JurisFinance
+
+portable:
+  artifactName: JurisFinance-${version}-portable.exe

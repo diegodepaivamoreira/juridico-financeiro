@@ -1,0 +1,34 @@
+{
+  "name": "JurisFinance — Gestão Financeira Jurídica",
+  "short_name": "JurisFinance",
+  "description": "Sistema profissional de gestão financeira para escritório de advocacia. Controle de lançamentos mensais, dashboard com métricas e gráficos, módulo A Receber, relatório anual, ranking de clientes e réus, projeção de receita, exportação para Excel e PDF.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#c2714f",
+  "background_color": "#f8f7f4",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23c2714f' width='192' height='192' rx='45'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central' font-family='serif'>⚖</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23c2714f' width='512' height='512' rx='120'/><text x='50%' y='50%' font-size='280' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central' font-family='serif'>⚖</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f8f7f4' width='540' height='720'/><text x='270' y='360' font-size='48' font-weight='bold' fill='%23c2714f' text-anchor='middle' dominant-baseline='central'>JurisFinance</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ]
+}
