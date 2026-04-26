@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import AuthGate from "./components/AuthGate";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
 import { DataProvider } from "./contexts/DataContext";
@@ -40,12 +41,16 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
-        <DataProvider>
-          <TooltipProvider>
-            <Toaster position="top-right" />
-            <Router />
-          </TooltipProvider>
-        </DataProvider>
+        <Toaster position="top-right" />
+        <AuthGate>
+          {(session) => (
+            <DataProvider session={session}>
+              <TooltipProvider>
+                <Router />
+              </TooltipProvider>
+            </DataProvider>
+          )}
+        </AuthGate>
       </ThemeProvider>
     </ErrorBoundary>
   );

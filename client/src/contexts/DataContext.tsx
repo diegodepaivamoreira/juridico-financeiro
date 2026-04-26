@@ -1,8 +1,9 @@
 /**
  * JurisFinance — Contexto Global de Dados
- * Gerencia estado da aplicação com persistência em localStorage
+ * Sincroniza com Supabase (cloud) e mantém cache em localStorage para offline.
  */
-import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import {
   AppData,
   ItemAReceber,
@@ -10,9 +11,12 @@ import {
   carregarDados,
   salvarDados,
 } from "@/lib/store";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface DataContextValue {
   data: AppData;
+  syncing: boolean;
   addLancamento: (l: Omit<Lancamento, "id">) => void;
   updateLancamento: (id: string, l: Partial<Lancamento>) => void;
   deleteLancamento: (id: string) => void;
@@ -29,12 +33,75 @@ function gerarId(): string {
   return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
 
-export function DataProvider({ children }: { children: React.ReactNode }) {
+export function DataProvider({ session, children }: { session: Session; children: React.ReactNode }) {
+  const userId = session.user.id;
   const [data, setData] = useState<AppData>(() => carregarDados());
+  const [loaded, setLoaded] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialFetchDone = useRef(false);
 
   useEffect(() => {
+    if (initialFetchDone.current) return;
+    initialFetchDone.current = true;
+
+    (async () => {
+      const { data: row, error } = await supabase
+        .from("user_data")
+        .select("data")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        toast.error("Erro ao carregar dados da nuvem: " + error.message);
+        setLoaded(true);
+        return;
+      }
+
+      if (row?.data) {
+        const cloud = row.data as AppData;
+        if (cloud.lancamentos) {
+          cloud.lancamentos = cloud.lancamentos.map((l) => ({
+            ...l,
+            tipoRegistro: l.tipoRegistro || "Faturamento",
+          }));
+        }
+        setData(cloud);
+        salvarDados(cloud);
+      } else {
+        const local = carregarDados();
+        const { error: insErr } = await supabase
+          .from("user_data")
+          .insert({ user_id: userId, data: local });
+        if (insErr) {
+          toast.error("Erro ao inicializar nuvem: " + insErr.message);
+        }
+      }
+      setLoaded(true);
+    })();
+  }, [userId]);
+
+  useEffect(() => {
+    if (!loaded) return;
     salvarDados(data);
-  }, [data]);
+
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    setSyncing(true);
+    saveTimeoutRef.current = setTimeout(async () => {
+      const { error } = await supabase
+        .from("user_data")
+        .update({ data, updated_at: new Date().toISOString() })
+        .eq("user_id", userId);
+      if (error) {
+        toast.error("Erro ao sincronizar: " + error.message);
+      }
+      setSyncing(false);
+    }, 800);
+
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, [data, loaded, userId]);
 
   const addLancamento = useCallback((l: Omit<Lancamento, "id">) => {
     setData((prev) => ({
@@ -88,10 +155,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setData((prev) => ({ ...prev, ...partial }));
   }, []);
 
+  if (!loaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        Carregando seus dados…
+      </div>
+    );
+  }
+
   return (
     <DataContext.Provider
       value={{
         data,
+        syncing,
         addLancamento,
         updateLancamento,
         deleteLancamento,

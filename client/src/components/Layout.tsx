@@ -5,17 +5,22 @@
  * Acento terracota (#c2714f), slate (#475569), off-white (#f8f7f4)
  */
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
+import { useData } from "@/contexts/DataContext";
 import {
   BarChart3,
   BookOpen,
   Calendar,
+  Check,
   ChevronLeft,
   ChevronRight,
   Clock,
+  Cloud,
   Download,
   Filter,
   History,
   LayoutDashboard,
+  LogOut,
   Scale,
   TrendingUp,
 } from "lucide-react";
@@ -50,6 +55,7 @@ const GROUP_LABELS: Record<string, string> = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const { syncing } = useData();
 
   const groups = Array.from(new Set(NAV_ITEMS.map((i) => i.group)));
 
@@ -117,8 +123,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Collapse button */}
-        <div className="p-2 border-t border-slate-100">
+        {/* Sync status + logout + collapse */}
+        <div className="p-2 border-t border-slate-100 space-y-1">
+          <div
+            className={cn(
+              "flex items-center gap-2 px-2 py-1.5 text-[11px] text-slate-400",
+              collapsed && "justify-center"
+            )}
+            title={syncing ? "Salvando na nuvem…" : "Sincronizado"}
+          >
+            {syncing ? <Cloud size={14} className="animate-pulse" /> : <Check size={14} className="text-emerald-500" />}
+            {!collapsed && <span>{syncing ? "Salvando…" : "Sincronizado"}</span>}
+          </div>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className={cn(
+              "w-full flex items-center gap-2 px-2 py-2 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all",
+              collapsed && "justify-center"
+            )}
+            title="Sair"
+          >
+            <LogOut size={16} />
+            {!collapsed && <span className="text-xs">Sair</span>}
+          </button>
           <button
             onClick={() => setCollapsed((v) => !v)}
             className={cn(
