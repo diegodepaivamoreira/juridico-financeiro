@@ -7,12 +7,12 @@
  */
 
 export type TipoLancamento = "Acordo" | "Sucumbência" | "Sentença Principal" | "Multas e Diferenças" | "Execução" | "Consulta" | "Procuração" | "Salário" | "Outros";
-export type BancoLancamento = "Santander" | "Itaú" | "Nubank" | "Mercado Pago" | "Wise" | "PicPay";
+export type BancoLancamento = "Santander" | "Itaú" | "Nubank" | "Mercado Pago" | "Wise" | "PicPay" | "Caixa Econômica Federal";
 export type StatusReceber = "Pendente" | "Recebido";
 export type TipoRegistro = "Faturamento" | "Pessoal" | "Apostila"; // Novo: Faturamento (conta nas métricas), Pessoal (não conta), Apostila (organização)
 
 export const TIPOS: TipoLancamento[] = ["Acordo", "Sucumbência", "Sentença Principal", "Multas e Diferenças", "Execução", "Consulta", "Procuração", "Salário", "Outros"];
-export const BANCOS: BancoLancamento[] = ["Santander", "Itaú", "Nubank", "Mercado Pago", "Wise", "PicPay"];
+export const BANCOS: BancoLancamento[] = ["Santander", "Itaú", "Nubank", "Mercado Pago", "Wise", "PicPay", "Caixa Econômica Federal"];
 export const REUS_PADRAO = ["Itaú", "Claro", "Rio+", "Pagseguro", "Ebazar", "TIM", "Buser", "Doctorália", "FGTS", "L. Comp."];
 export const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 export const LIMITE_BANCO = 5000; // Limite MENSAL por banco
@@ -176,6 +176,7 @@ export function receitaPorBanco(lancamentos: Lancamento[], mes: number, ano: num
     "Mercado Pago": 0,
     Wise: 0,
     PicPay: 0,
+    "Caixa Econômica Federal": 0,
   };
   lancamentos
     .filter((l) => l.mes === mes && l.ano === ano)
