@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>JurisFinance</title>
+    <script type="text/javascript">
+      // SPA redirect para GitHub Pages.
+      // Converte /juridico-financeiro/rota em /juridico-financeiro/?/rota
+      // e o index.html reconstrói a rota original.
+      var segmentCount = 1; // número de segmentos do path base (juridico-financeiro)
+      var l = window.location;
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
+        l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
