@@ -15,7 +15,7 @@ import {
   rankingReus,
   receitaAnual,
   receitaMes,
-  receitaPorBanco,
+  receitaPorBancoAnual,
   receitaPorTipo,
   statusBanco,
 } from "@/lib/store";
@@ -62,9 +62,8 @@ function gerarExcel(data: ReturnType<typeof useData>["data"]) {
   });
 
   // ── Dashboard / Anual ─────────────────────────────────────────────────────
-  const porBanco = receitaPorBanco(lancamentos, 0, anoAtivo);
+  const porBanco = receitaPorBancoAnual(lancamentos, anoAtivo);
   const porTipo = receitaPorTipo(lancamentos, anoAtivo);
-  const porBanco2 = receitaPorBanco(lancamentos, 0, anoAtivo);
   const reus = rankingReus(lancamentos, anoAtivo);
   const clientes = rankingClientes(lancamentos, anoAtivo);
   const projecao = projecaoMensal(lancamentos, anoAtivo);
@@ -110,7 +109,7 @@ function gerarExcel(data: ReturnType<typeof useData>["data"]) {
   // ── A Receber ─────────────────────────────────────────────────────────────
   const arRows = [
     ["Cliente", "Réu", "Tipo", "Valor", "Status"],
-    ...aReceber.map((i) => [i.cliente, i.reu, i.tipo, i.valor ?? "", i.status]),
+    ...aReceber.map((i) => [i.autor1 || i.cliente || "", i.reu1 || i.reu || "", i.tipo, i.valor ?? "", i.status]),
     [],
     ["", "", "TOTAL PENDENTE", aReceber.filter((i) => i.status === "Pendente").reduce((s, i) => s + (i.valor || 0), 0), ""],
     ["", "", "TOTAL RECEBIDO", aReceber.filter((i) => i.status === "Recebido").reduce((s, i) => s + (i.valor || 0), 0), ""],
@@ -125,7 +124,7 @@ function gerarExcel(data: ReturnType<typeof useData>["data"]) {
 function gerarPDF(data: ReturnType<typeof useData>["data"]) {
   const { lancamentos, aReceber, anoAtivo } = data;
   const total = receitaAnual(lancamentos, anoAtivo);
-  const porBanco = receitaPorBanco(lancamentos, 0, anoAtivo);
+  const porBanco = receitaPorBancoAnual(lancamentos, anoAtivo);
   const porTipo = receitaPorTipo(lancamentos, anoAtivo);
   const projecao = projecaoMensal(lancamentos, anoAtivo);
   const reus = rankingReus(lancamentos, anoAtivo);

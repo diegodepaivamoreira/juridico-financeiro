@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useData } from "@/contexts/DataContext";
 import {
+  JUIZADOS,
   Peticao,
   STATUS_PETICAO,
   StatusPeticao,
@@ -116,7 +117,7 @@ export default function Peticoes() {
   const [dialogAberto, setDialogAberto] = useState(false);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(FORM_VAZIO);
-  const [filtroStatus, setFiltroStatus] = useState<StatusPeticao | "todos">("todos");
+  const [filtroStatus, setFiltroStatus] = useState<StatusPeticao | "todos">("A fazer");
   const [busca, setBusca] = useState("");
 
   const itens = useMemo(() => {
@@ -247,19 +248,8 @@ export default function Peticoes() {
         </Button>
       </div>
 
-      {/* Filtros por status */}
+      {/* Filtros por status — "A fazer" primeiro, "Todas" no final */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          onClick={() => setFiltroStatus("todos")}
-          className={cn(
-            "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
-            filtroStatus === "todos"
-              ? "bg-slate-800 text-white border-slate-800"
-              : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
-          )}
-        >
-          Todas ({contagem.todos})
-        </button>
         {STATUS_PETICAO.map((s) => {
           const style = STATUS_STYLE[s];
           const ativo = filtroStatus === s;
@@ -279,6 +269,17 @@ export default function Peticoes() {
             </button>
           );
         })}
+        <button
+          onClick={() => setFiltroStatus("todos")}
+          className={cn(
+            "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
+            filtroStatus === "todos"
+              ? "bg-slate-800 text-white border-slate-800"
+              : "bg-white text-slate-600 border-slate-200 hover:border-slate-400"
+          )}
+        >
+          Todas ({contagem.todos})
+        </button>
       </div>
 
       {/* Busca */}
@@ -464,12 +465,19 @@ export default function Peticoes() {
             </div>
 
             <div className="col-span-2">
-              <Label>Juizado / Vara / Comarca</Label>
-              <Input
-                value={form.juizado}
-                onChange={(e) => setForm({ ...form, juizado: e.target.value })}
-                placeholder="Ex: 1ª Vara Cível de São Paulo"
-              />
+              <Label>Juizado (onde deve cair a ação)</Label>
+              <Select value={form.juizado} onValueChange={(v) => setForm({ ...form, juizado: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o juizado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JUIZADOS.map((j) => (
+                    <SelectItem key={j} value={j}>
+                      {j}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="col-span-2">

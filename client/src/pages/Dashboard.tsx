@@ -50,6 +50,8 @@ const CORES_BANCO: Record<string, string> = {
   Nubank: "#7c3aed",
   "Mercado Pago": "#059669",
   Wise: "#0284c7",
+  PicPay: "#11c76f",
+  "Caixa Econômica Federal": "#0070b9",
 };
 
 const CORES_TIPO = ["#c2714f", "#475569", "#d97706", "#059669", "#7c3aed"];
@@ -114,7 +116,7 @@ export default function Dashboard() {
   const receitaTotal = receitaAnual(lancamentos, anoAtivo);
   const projecao = projecaoMensal(lancamentos, anoAtivo);
   const mesAtualNum = new Date().getMonth() + 1;
-  const porBanco = receitaPorBanco(lancamentos, anoAtivo, mesAtualNum);
+  const porBanco = receitaPorBanco(lancamentos, mesAtualNum, anoAtivo);
   const porTipo = receitaPorTipo(lancamentos, anoAtivo);
   const topReus = rankingReus(lancamentos, anoAtivo).slice(0, 5);
   const topClientes = rankingClientes(lancamentos, anoAtivo).slice(0, 5);

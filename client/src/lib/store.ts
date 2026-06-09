@@ -19,6 +19,7 @@ export type TipoPeticao = "Inicial" | "Contestação" | "Réplica" | "Recurso" |
 
 export const STATUS_PETICAO: StatusPeticao[] = ["A fazer", "Em elaboração", "Pronta", "Protocolada"];
 export const TIPOS_PETICAO: TipoPeticao[] = ["Inicial", "Contestação", "Réplica", "Recurso", "Embargos", "Cumprimento de Sentença", "Petição Simples", "Outros"];
+export const JUIZADOS: string[] = ["JEC Santa Cruz", "JEC Santa Cruz (vídeo)", "JEC Campo Grande", "JEC Barra da Tijuca"];
 
 export interface Peticao {
   id: string;
@@ -201,6 +202,24 @@ export function receitaPorBanco(lancamentos: Lancamento[], mes: number, ano: num
   };
   lancamentos
     .filter((l) => l.mes === mes && l.ano === ano)
+    .forEach((l) => {
+      result[l.banco] += l.valor;
+    });
+  return result;
+}
+
+export function receitaPorBancoAnual(lancamentos: Lancamento[], ano: number): Record<BancoLancamento, number> {
+  const result: Record<BancoLancamento, number> = {
+    Santander: 0,
+    Itaú: 0,
+    Nubank: 0,
+    "Mercado Pago": 0,
+    Wise: 0,
+    PicPay: 0,
+    "Caixa Econômica Federal": 0,
+  };
+  lancamentos
+    .filter((l) => l.ano === ano)
     .forEach((l) => {
       result[l.banco] += l.valor;
     });
