@@ -14,6 +14,7 @@ import Exportar from "./pages/Exportar";
 import Filtros from "./pages/Filtros";
 import Historico from "./pages/Historico";
 import Lancamentos from "./pages/Lancamentos";
+import Peticoes from "./pages/Peticoes";
 import Ranking from "./pages/Ranking";
 import Relatorio from "./pages/Relatorio";
 const BASE_PATH = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -26,6 +27,7 @@ function Router() {
           <Route path="/" component={Dashboard} />
           <Route path="/lancamentos" component={Lancamentos} />
           <Route path="/a-receber" component={AReceber} />
+          <Route path="/peticoes" component={Peticoes} />
           <Route path="/anual" component={Anual} />
           <Route path="/ranking" component={Ranking} />
           <Route path="/relatorio" component={Relatorio} />

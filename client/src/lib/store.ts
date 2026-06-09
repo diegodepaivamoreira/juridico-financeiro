@@ -13,6 +13,26 @@ export type TipoRegistro = "Faturamento" | "Pessoal" | "Apostila"; // Novo: Fatu
 
 export const TIPOS: TipoLancamento[] = ["Acordo", "Sucumbência", "Sentença Principal", "Multas e Diferenças", "Execução", "Consulta", "Procuração", "Salário", "Outros"];
 export const BANCOS: BancoLancamento[] = ["Santander", "Itaú", "Nubank", "Mercado Pago", "Wise", "PicPay", "Caixa Econômica Federal"];
+
+export type StatusPeticao = "A fazer" | "Em elaboração" | "Pronta" | "Protocolada";
+export type TipoPeticao = "Inicial" | "Contestação" | "Réplica" | "Recurso" | "Embargos" | "Cumprimento de Sentença" | "Petição Simples" | "Outros";
+
+export const STATUS_PETICAO: StatusPeticao[] = ["A fazer", "Em elaboração", "Pronta", "Protocolada"];
+export const TIPOS_PETICAO: TipoPeticao[] = ["Inicial", "Contestação", "Réplica", "Recurso", "Embargos", "Cumprimento de Sentença", "Petição Simples", "Outros"];
+
+export interface Peticao {
+  id: string;
+  autor: string;
+  reu: string;
+  tipo: TipoPeticao;
+  juizado: string;
+  numeroProcesso?: string;
+  status: StatusPeticao;
+  dataCadastro: string;     // ISO datetime (com hora)
+  prazo?: string;            // ISO date - prazo para fazer/protocolar
+  dataProtocolo?: string;    // ISO datetime - quando foi protocolada
+  observacoes?: string;      // expectativa de acordo viável + qualquer outra obs
+}
 export const REUS_PADRAO = ["Itaú", "Claro", "Rio+", "Pagseguro", "Ebazar", "TIM", "Buser", "Doctorália", "FGTS", "L. Comp."];
 export const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 export const LIMITE_BANCO = 5000; // Limite MENSAL por banco
@@ -62,6 +82,7 @@ export interface AppData {
   anoAtivo: number;
   metas?: Record<string, number>;
   apostilas?: { id: string; data: string; descricao: string; valor: number; quantidade: number }[]; // Novo: controle de vendas de apostilas
+  peticoes?: Peticao[];
 }
 
 const STORAGE_KEY = "jurisfinance_data";

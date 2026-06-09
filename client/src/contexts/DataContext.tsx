@@ -8,6 +8,7 @@ import {
   AppData,
   ItemAReceber,
   Lancamento,
+  Peticao,
   carregarDados,
   salvarDados,
 } from "@/lib/store";
@@ -23,6 +24,9 @@ interface DataContextValue {
   addAReceber: (item: Omit<ItemAReceber, "id">) => void;
   updateAReceber: (id: string, item: Partial<ItemAReceber>) => void;
   deleteAReceber: (id: string) => void;
+  addPeticao: (p: Omit<Peticao, "id">) => void;
+  updatePeticao: (id: string, p: Partial<Peticao>) => void;
+  deletePeticao: (id: string) => void;
   setAnoAtivo: (ano: number) => void;
   updateData: (partial: Partial<AppData>) => void;
 }
@@ -147,6 +151,29 @@ export function DataProvider({ session, children }: { session: Session; children
     }));
   }, []);
 
+  const addPeticao = useCallback((p: Omit<Peticao, "id">) => {
+    setData((prev) => ({
+      ...prev,
+      peticoes: [...(prev.peticoes || []), { ...p, id: gerarId() }],
+    }));
+  }, []);
+
+  const updatePeticao = useCallback((id: string, p: Partial<Peticao>) => {
+    setData((prev) => ({
+      ...prev,
+      peticoes: (prev.peticoes || []).map((item) =>
+        item.id === id ? { ...item, ...p } : item
+      ),
+    }));
+  }, []);
+
+  const deletePeticao = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      peticoes: (prev.peticoes || []).filter((i) => i.id !== id),
+    }));
+  }, []);
+
   const setAnoAtivo = useCallback((ano: number) => {
     setData((prev) => ({ ...prev, anoAtivo: ano }));
   }, []);
@@ -174,6 +201,9 @@ export function DataProvider({ session, children }: { session: Session; children
         addAReceber,
         updateAReceber,
         deleteAReceber,
+        addPeticao,
+        updatePeticao,
+        deletePeticao,
         setAnoAtivo,
         updateData,
       }}
