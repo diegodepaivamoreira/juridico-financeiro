@@ -19,7 +19,7 @@ export type TipoPeticao = "Inicial" | "Contestação" | "Réplica" | "Recurso" |
 
 export const STATUS_PETICAO: StatusPeticao[] = ["A fazer", "Em elaboração", "Pronta", "Protocolada"];
 export const TIPOS_PETICAO: TipoPeticao[] = ["Inicial", "Contestação", "Réplica", "Recurso", "Embargos", "Cumprimento de Sentença", "Petição Simples", "Outros"];
-export const JUIZADOS: string[] = ["1º JEC Santa Cruz (VÍDEO)", "2º JEC Santa Cruz", "JEC Campo Grande", "JEC Barra da Tijuca"];
+export const JUIZADOS: string[] = ["1º JEC Santa Cruz", "2º JEC Santa Cruz (VÍDEO)", "JEC Campo Grande", "JEC Barra da Tijuca"];
 
 export interface Peticao {
   id: string;
