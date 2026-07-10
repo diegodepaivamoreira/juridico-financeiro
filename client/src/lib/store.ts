@@ -7,12 +7,12 @@
  */
 
 export type TipoLancamento = "Acordo" | "Sucumbência" | "Sentença Principal" | "Multas e Diferenças" | "Execução" | "Consulta" | "Procuração" | "Salário" | "Outros";
-export type BancoLancamento = "Santander" | "Itaú" | "Nubank" | "Mercado Pago" | "Wise" | "PicPay" | "Caixa Econômica Federal";
+export type BancoLancamento = "Santander" | "Itaú" | "Nubank" | "Mercado Pago" | "Wise" | "PicPay" | "Caixa Econômica Federal" | "Dinheiro";
 export type StatusReceber = "Pendente" | "Recebido";
 export type TipoRegistro = "Faturamento" | "Pessoal" | "Apostila"; // Novo: Faturamento (conta nas métricas), Pessoal (não conta), Apostila (organização)
 
 export const TIPOS: TipoLancamento[] = ["Acordo", "Sucumbência", "Sentença Principal", "Multas e Diferenças", "Execução", "Consulta", "Procuração", "Salário", "Outros"];
-export const BANCOS: BancoLancamento[] = ["Santander", "Itaú", "Nubank", "Mercado Pago", "Wise", "PicPay", "Caixa Econômica Federal"];
+export const BANCOS: BancoLancamento[] = ["Santander", "Itaú", "Nubank", "Mercado Pago", "Wise", "PicPay", "Caixa Econômica Federal", "Dinheiro"];
 
 export type StatusPeticao = "A fazer" | "Em elaboração" | "Pronta" | "Protocolada";
 export type TipoPeticao = "Inicial" | "Contestação" | "Réplica" | "Recurso" | "Embargos" | "Cumprimento de Sentença" | "Petição Simples" | "Outros";
@@ -199,6 +199,7 @@ export function receitaPorBanco(lancamentos: Lancamento[], mes: number, ano: num
     Wise: 0,
     PicPay: 0,
     "Caixa Econômica Federal": 0,
+    Dinheiro: 0,
   };
   lancamentos
     .filter((l) => l.mes === mes && l.ano === ano)
@@ -217,6 +218,7 @@ export function receitaPorBancoAnual(lancamentos: Lancamento[], ano: number): Re
     Wise: 0,
     PicPay: 0,
     "Caixa Econômica Federal": 0,
+    Dinheiro: 0,
   };
   lancamentos
     .filter((l) => l.ano === ano)

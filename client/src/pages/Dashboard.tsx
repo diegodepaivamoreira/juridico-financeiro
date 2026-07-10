@@ -52,6 +52,7 @@ const CORES_BANCO: Record<string, string> = {
   Wise: "#0284c7",
   PicPay: "#11c76f",
   "Caixa Econômica Federal": "#0070b9",
+  Dinheiro: "#16a34a",
 };
 
 const CORES_TIPO = ["#c2714f", "#475569", "#d97706", "#059669", "#7c3aed"];
