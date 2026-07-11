@@ -24,6 +24,7 @@ import {
   LogOut,
   Scale,
   TrendingUp,
+  Upload,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
@@ -45,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/relatorio", label: "Relatório", icon: <BarChart3 size={18} />, group: "analise" },
   { href: "/filtros", label: "Filtros e Metas", icon: <Filter size={18} />, group: "analise" },
   { href: "/historico", label: "Histórico", icon: <History size={18} />, group: "ferramentas" },
+  { href: "/importar", label: "Importar", icon: <Upload size={18} />, group: "ferramentas" },
   { href: "/exportar", label: "Exportar", icon: <Download size={18} />, group: "ferramentas" },
 ];
 

@@ -19,8 +19,8 @@ import {
   receitaPorTipo,
   statusBanco,
 } from "@/lib/store";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
-import { useState } from "react";
+import { Download, FileSpreadsheet, FileText, HardDriveDownload, HardDriveUpload } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -231,9 +231,53 @@ ${aReceber.map((i) => `<tr><td>${i.autor1 || "—"}</td><td>${i.reu1 || "—"}</
 }
 
 export default function Exportar() {
-  const { data } = useData();
+  const { data, updateData } = useData();
   const [loadingXlsx, setLoadingXlsx] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function baixarBackup() {
+    try {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const hoje = new Date().toISOString().split("T")[0];
+      a.href = url;
+      a.download = `jurisfinance-backup-${hoje}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Backup salvo! Guarde o arquivo em local seguro (Drive, OneDrive...).");
+    } catch {
+      toast.error("Erro ao gerar backup");
+    }
+  }
+
+  function restaurarBackup(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(String(ev.target?.result));
+        if (!parsed || !Array.isArray(parsed.lancamentos)) {
+          toast.error("Arquivo inválido: não parece um backup do JurisFinance.");
+          return;
+        }
+        const totalLanc = parsed.lancamentos.length;
+        const ok = window.confirm(
+          `Isto vai SUBSTITUIR todos os dados atuais pelo backup (${totalLanc} lançamentos). Esta ação não pode ser desfeita. Deseja continuar?`
+        );
+        if (!ok) return;
+        updateData(parsed);
+        toast.success(`Backup restaurado! ${totalLanc} lançamentos carregados e sincronizando.`);
+      } catch {
+        toast.error("Não foi possível ler o arquivo (JSON inválido).");
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsText(file);
+  }
   const [periodo, setPeriodo] = useState<'mensal' | 'semestral' | 'anual'>('anual');
   const [mesSelecionado, setMesSelecionado] = useState(1);
   const [semestreSelecionado, setSemestreSelecionado] = useState(1);
@@ -372,6 +416,49 @@ export default function Exportar() {
                   {loadingPdf ? "Gerando..." : "Gerar PDF / Imprimir"}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Backup / Restaurar (rede de segurança independente da nuvem) */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-[#c2714f]/10 flex items-center justify-center shrink-0">
+              <HardDriveDownload size={24} className="text-[#c2714f]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-slate-800 mb-1" style={{ fontFamily: "'Fraunces', serif" }}>
+                Backup e Restauração (arquivo .json)
+              </h3>
+              <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                Salve <strong>todos os seus dados</strong> (lançamentos, a receber, petições, metas) num arquivo.
+                Rede de segurança caso precise — guarde no Google Drive ou OneDrive. Para restaurar, selecione um
+                arquivo de backup salvo anteriormente.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={baixarBackup} className="bg-[#c2714f] hover:bg-[#a85f42] text-white gap-2">
+                  <HardDriveDownload size={16} />
+                  Baixar backup
+                </Button>
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                  className="gap-2 border-slate-300"
+                >
+                  <HardDriveUpload size={16} />
+                  Restaurar backup
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="application/json,.json"
+                  onChange={restaurarBackup}
+                  className="hidden"
+                />
+              </div>
+              <p className="text-[11px] text-amber-600 mt-3">
+                ⚠️ Restaurar substitui todos os dados atuais pelos do arquivo.
+              </p>
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Exportar from "./pages/Exportar";
 import Filtros from "./pages/Filtros";
 import Historico from "./pages/Historico";
+import Importar from "./pages/Importar";
 import Lancamentos from "./pages/Lancamentos";
 import Peticoes from "./pages/Peticoes";
 import Ranking from "./pages/Ranking";
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/relatorio" component={Relatorio} />
           <Route path="/filtros" component={Filtros} />
           <Route path="/historico" component={Historico} />
+          <Route path="/importar" component={Importar} />
           <Route path="/exportar" component={Exportar} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
