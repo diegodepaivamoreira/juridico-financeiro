@@ -49,39 +49,67 @@ export function DataProvider({ session, children }: { session: Session; children
     if (initialFetchDone.current) return;
     initialFetchDone.current = true;
 
+    // Garante que o app NUNCA trave em "Carregando…": se a nuvem não responder
+    // em 8s, liberamos o app com os dados do cache local.
+    const failSafe = setTimeout(() => {
+      setLoaded((already) => {
+        if (!already) {
+          toast.error("Nuvem demorou a responder. Usando dados locais — as alterações sincronizam quando a conexão voltar.");
+        }
+        return true;
+      });
+    }, 8000);
+
     (async () => {
-      const { data: row, error } = await supabase
-        .from("user_data")
-        .select("data")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        toast.error("Erro ao carregar dados da nuvem: " + error.message);
-        setLoaded(true);
-        return;
-      }
-
-      if (row?.data) {
-        const cloud = row.data as AppData;
-        if (cloud.lancamentos) {
-          cloud.lancamentos = cloud.lancamentos.map((l) => ({
-            ...l,
-            tipoRegistro: l.tipoRegistro || "Faturamento",
-          }));
-        }
-        setData(cloud);
-        salvarDados(cloud);
-      } else {
-        const local = carregarDados();
-        const { error: insErr } = await supabase
+      try {
+        const fetchPromise = supabase
           .from("user_data")
-          .insert({ user_id: userId, data: local });
-        if (insErr) {
-          toast.error("Erro ao inicializar nuvem: " + insErr.message);
+          .select("data")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        // Corrida entre a busca e um timeout de 8s
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), 8000)
+        );
+
+        const { data: row, error } = (await Promise.race([
+          fetchPromise,
+          timeoutPromise,
+        ])) as Awaited<typeof fetchPromise>;
+
+        if (error) {
+          toast.error("Erro ao carregar dados da nuvem: " + error.message);
+          setLoaded(true);
+          return;
         }
+
+        if (row?.data) {
+          const cloud = row.data as AppData;
+          if (cloud.lancamentos) {
+            cloud.lancamentos = cloud.lancamentos.map((l) => ({
+              ...l,
+              tipoRegistro: l.tipoRegistro || "Faturamento",
+            }));
+          }
+          setData(cloud);
+          salvarDados(cloud);
+        } else {
+          const local = carregarDados();
+          const { error: insErr } = await supabase
+            .from("user_data")
+            .insert({ user_id: userId, data: local });
+          if (insErr) {
+            toast.error("Erro ao inicializar nuvem: " + insErr.message);
+          }
+        }
+      } catch (e: any) {
+        // Timeout ou falha de rede: seguimos com o cache local
+        toast.error("Não foi possível falar com a nuvem agora. Usando dados locais.");
+      } finally {
+        clearTimeout(failSafe);
+        setLoaded(true);
       }
-      setLoaded(true);
     })();
   }, [userId]);
 
