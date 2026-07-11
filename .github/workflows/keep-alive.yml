@@ -1,0 +1,29 @@
+name: Keep Supabase Alive
+
+# Mantém o projeto Supabase (plano grátis) ativo, evitando a pausa por inatividade.
+# Faz um ping leve na API a cada 3 dias. Também pode ser rodado manualmente.
+
+on:
+  schedule:
+    - cron: "0 6 */3 * *" # a cada 3 dias, 06:00 UTC (03:00 BRT)
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          URL="https://xarsofqabasnknxywduu.supabase.co/rest/v1/user_data?select=user_id&limit=1"
+          KEY="sb_publishable_vCaSz1mA21Ar8ACEl5AT6w_oRMJvGUh"
+          echo "Pingando Supabase para manter o projeto ativo..."
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY")
+          echo "HTTP status: $CODE"
+          # Qualquer resposta (200/206/401/403) prova que o banco respondeu e reseta a inatividade.
+          if [ "$CODE" = "000" ]; then
+            echo "Sem resposta do Supabase (projeto pode estar pausado)."
+            exit 1
+          fi
+          echo "Supabase respondeu — projeto mantido ativo."
