@@ -18,6 +18,7 @@ import { toast } from "sonner";
 interface DataContextValue {
   data: AppData;
   syncing: boolean;
+  offline: boolean;
   addLancamento: (l: Omit<Lancamento, "id">) => void;
   updateLancamento: (id: string, l: Partial<Lancamento>) => void;
   deleteLancamento: (id: string) => void;
@@ -37,11 +38,14 @@ function gerarId(): string {
   return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
 
-export function DataProvider({ session, children }: { session: Session; children: React.ReactNode }) {
-  const userId = session.user.id;
+const TS_KEY = "jurisfinance_updated_at";
+
+export function DataProvider({ session, children }: { session: Session | null; children: React.ReactNode }) {
+  const userId = session?.user.id ?? null;
   const [data, setData] = useState<AppData>(() => carregarDados());
   const [loaded, setLoaded] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [offline, setOffline] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialFetchDone = useRef(false);
 
@@ -49,12 +53,20 @@ export function DataProvider({ session, children }: { session: Session; children
     if (initialFetchDone.current) return;
     initialFetchDone.current = true;
 
+    // Sem sessão → modo offline: usa apenas o cache local deste dispositivo.
+    if (!userId) {
+      setOffline(true);
+      setLoaded(true);
+      return;
+    }
+
     // Garante que o app NUNCA trave em "Carregando…": se a nuvem não responder
     // em 8s, liberamos o app com os dados do cache local.
     const failSafe = setTimeout(() => {
       setLoaded((already) => {
         if (!already) {
-          toast.error("Nuvem demorou a responder. Usando dados locais — as alterações sincronizam quando a conexão voltar.");
+          setOffline(true);
+          toast.error("Nuvem demorou a responder. Usando dados locais — sincroniza quando a conexão voltar.");
         }
         return true;
       });
@@ -64,7 +76,7 @@ export function DataProvider({ session, children }: { session: Session; children
       try {
         const fetchPromise = supabase
           .from("user_data")
-          .select("data")
+          .select("data, updated_at")
           .eq("user_id", userId)
           .maybeSingle();
 
@@ -79,6 +91,7 @@ export function DataProvider({ session, children }: { session: Session; children
         ])) as Awaited<typeof fetchPromise>;
 
         if (error) {
+          setOffline(true);
           toast.error("Erro ao carregar dados da nuvem: " + error.message);
           setLoaded(true);
           return;
@@ -92,8 +105,25 @@ export function DataProvider({ session, children }: { session: Session; children
               tipoRegistro: l.tipoRegistro || "Faturamento",
             }));
           }
-          setData(cloud);
-          salvarDados(cloud);
+          const localTs = localStorage.getItem(TS_KEY);
+          const cloudTs = (row as any).updated_at as string | null;
+          const localNewer = !!localTs && !!cloudTs && new Date(localTs) > new Date(cloudTs);
+
+          if (localNewer) {
+            // Há alterações locais (feitas offline) mais recentes que a nuvem →
+            // mantém o local e ENVIA para a nuvem, sem sobrescrever seu trabalho.
+            const local = carregarDados();
+            setData(local);
+            await supabase
+              .from("user_data")
+              .update({ data: local, updated_at: new Date().toISOString() })
+              .eq("user_id", userId);
+            toast.success("Alterações feitas offline foram enviadas para a nuvem.");
+          } else {
+            setData(cloud);
+            salvarDados(cloud);
+            if (cloudTs) localStorage.setItem(TS_KEY, cloudTs);
+          }
         } else {
           const local = carregarDados();
           const { error: insErr } = await supabase
@@ -103,8 +133,10 @@ export function DataProvider({ session, children }: { session: Session; children
             toast.error("Erro ao inicializar nuvem: " + insErr.message);
           }
         }
+        setOffline(false);
       } catch (e: any) {
         // Timeout ou falha de rede: seguimos com o cache local
+        setOffline(true);
         toast.error("Não foi possível falar com a nuvem agora. Usando dados locais.");
       } finally {
         clearTimeout(failSafe);
@@ -116,6 +148,13 @@ export function DataProvider({ session, children }: { session: Session; children
   useEffect(() => {
     if (!loaded) return;
     salvarDados(data);
+    localStorage.setItem(TS_KEY, new Date().toISOString());
+
+    // Modo offline (sem sessão): grava só localmente.
+    if (!userId) {
+      setSyncing(false);
+      return;
+    }
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     setSyncing(true);
@@ -125,7 +164,9 @@ export function DataProvider({ session, children }: { session: Session; children
         .update({ data, updated_at: new Date().toISOString() })
         .eq("user_id", userId);
       if (error) {
-        toast.error("Erro ao sincronizar: " + error.message);
+        setOffline(true);
+      } else {
+        setOffline(false);
       }
       setSyncing(false);
     }, 800);
@@ -223,6 +264,7 @@ export function DataProvider({ session, children }: { session: Session; children
       value={{
         data,
         syncing,
+        offline,
         addLancamento,
         updateLancamento,
         deleteLancamento,

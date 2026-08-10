@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 interface AuthGateProps {
-  children: (session: Session) => React.ReactNode;
+  children: (session: Session | null) => React.ReactNode;
 }
 
 type Mode = "signin" | "signup" | "reset" | "newpassword";
@@ -20,6 +20,7 @@ export default function AuthGate({ children }: AuthGateProps) {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [recoveryActive, setRecoveryActive] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -79,6 +80,11 @@ export default function AuthGate({ children }: AuthGateProps) {
   // Already signed in AND not in middle of password recovery → render app
   if (session && !recoveryActive) {
     return <>{children(session)}</>;
+  }
+
+  // Modo offline: usa os dados locais deste dispositivo, sem depender da nuvem
+  if (offlineMode && !session) {
+    return <>{children(null)}</>;
   }
 
   const titleMap: Record<Mode, string> = {
@@ -175,6 +181,22 @@ export default function AuthGate({ children }: AuthGateProps) {
             </button>
           )}
         </div>
+
+        {mode === "signin" && (
+          <div className="mt-6 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setOfflineMode(true)}
+            >
+              Usar sem internet (dados deste dispositivo)
+            </Button>
+            <p className="text-[11px] text-muted-foreground mt-2 text-center leading-relaxed">
+              Abre o app com os dados salvos neste computador. O que você editar sobe para a nuvem automaticamente quando você entrar na sua conta.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

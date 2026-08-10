@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Clock,
   Cloud,
+  CloudOff,
   Download,
   FileText,
   Filter,
@@ -59,7 +60,7 @@ const GROUP_LABELS: Record<string, string> = {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const { syncing } = useData();
+  const { syncing, offline } = useData();
 
   const groups = Array.from(new Set(NAV_ITEMS.map((i) => i.group)));
 
@@ -131,24 +132,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-2 border-t border-slate-100 space-y-1">
           <div
             className={cn(
-              "flex items-center gap-2 px-2 py-1.5 text-[11px] text-slate-400",
+              "flex items-center gap-2 px-2 py-1.5 text-[11px]",
+              offline ? "text-amber-500" : "text-slate-400",
               collapsed && "justify-center"
             )}
-            title={syncing ? "Salvando na nuvem…" : "Sincronizado"}
+            title={offline ? "Offline — dados salvos neste dispositivo" : syncing ? "Salvando na nuvem…" : "Sincronizado com a nuvem"}
           >
-            {syncing ? <Cloud size={14} className="animate-pulse" /> : <Check size={14} className="text-emerald-500" />}
-            {!collapsed && <span>{syncing ? "Salvando…" : "Sincronizado"}</span>}
+            {offline ? (
+              <CloudOff size={14} className="text-amber-500" />
+            ) : syncing ? (
+              <Cloud size={14} className="animate-pulse" />
+            ) : (
+              <Check size={14} className="text-emerald-500" />
+            )}
+            {!collapsed && <span>{offline ? "Offline (local)" : syncing ? "Salvando…" : "Sincronizado"}</span>}
           </div>
           <button
-            onClick={() => supabase.auth.signOut()}
+            onClick={() => (offline ? window.location.reload() : supabase.auth.signOut())}
             className={cn(
               "w-full flex items-center gap-2 px-2 py-2 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all",
               collapsed && "justify-center"
             )}
-            title="Sair"
+            title={offline ? "Voltar para o login (tentar nuvem)" : "Sair"}
           >
             <LogOut size={16} />
-            {!collapsed && <span className="text-xs">Sair</span>}
+            {!collapsed && <span className="text-xs">{offline ? "Entrar na nuvem" : "Sair"}</span>}
           </button>
           <button
             onClick={() => setCollapsed((v) => !v)}
