@@ -25,6 +25,11 @@ export default function AuthGate({ children }: AuthGateProps) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      // Se o usuário já escolheu offline antes e não há sessão válida,
+      // abre direto no modo offline — sem parede de login nem tela de erro.
+      if (!data.session && localStorage.getItem("jurisfinance_prefer_offline") === "1") {
+        setOfflineMode(true);
+      }
       setLoading(false);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
@@ -36,6 +41,11 @@ export default function AuthGate({ children }: AuthGateProps) {
     });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  function entrarOffline() {
+    localStorage.setItem("jurisfinance_prefer_offline", "1");
+    setOfflineMode(true);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -188,7 +198,7 @@ export default function AuthGate({ children }: AuthGateProps) {
               type="button"
               variant="outline"
               className="w-full"
-              onClick={() => setOfflineMode(true)}
+              onClick={entrarOffline}
             >
               Usar sem internet (dados deste dispositivo)
             </Button>

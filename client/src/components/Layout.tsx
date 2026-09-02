@@ -148,7 +148,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {!collapsed && <span>{offline ? "Offline (local)" : syncing ? "Salvando…" : "Sincronizado"}</span>}
           </div>
           <button
-            onClick={() => (offline ? window.location.reload() : supabase.auth.signOut())}
+            onClick={() => {
+              if (offline) {
+                localStorage.removeItem("jurisfinance_prefer_offline");
+                window.location.reload();
+              } else {
+                supabase.auth.signOut();
+              }
+            }}
             className={cn(
               "w-full flex items-center gap-2 px-2 py-2 rounded-lg text-slate-400 hover:bg-slate-50 hover:text-slate-600 transition-all",
               collapsed && "justify-center"

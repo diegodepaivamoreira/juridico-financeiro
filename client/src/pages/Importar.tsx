@@ -25,6 +25,7 @@ interface LinhaImport {
   autor1: string;
   reu1: string;
   reu2: string;
+  processo: string;
   tipo: TipoLancamento;
   valor: string;
   banco: BancoLancamento | "";
@@ -32,9 +33,12 @@ interface LinhaImport {
   observacoes: string;
 }
 
-const EXEMPLO = `01/07/26 - 1.300,00 - Iara X Rio + e Fab (PICPAY)
-09/07/26 - 300,00 - CEMF Atrasados (DINHEIRO)
-09/07/26 - 316,18 - Patrick x Nestlé (SANTANDER)`;
+const EXEMPLO = `24/06/26 - 222,50 - Jhonata Moura de Araujo X TIM S/A 0821643-66.2025.8.19.0206 (WISE)
+01/07/26 - 1.300,00 - Iara X Rio + e Fab (PICPAY)
+09/07/26 - 300,00 - CEMF Atrasados (DINHEIRO)`;
+
+// Detecta número de processo no padrão CNJ (0000000-00.0000.0.00.0000)
+const REGEX_PROCESSO = /\d{7}-?\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}/;
 
 // Normaliza texto (sem acento, minúsculo) para comparação
 function norm(s: string): string {
@@ -98,7 +102,15 @@ function parseLinha(linha: string): LinhaImport | null {
 
   const data = parseData(partes[0]);
   const valor = parseValor(partes[1]);
-  const descricao = partes.slice(2).join(" - ").trim();
+  let descricao = partes.slice(2).join(" - ").trim();
+
+  // extrai número de processo (CNJ), se houver, e remove do texto
+  let processo = "";
+  const procMatch = descricao.match(REGEX_PROCESSO);
+  if (procMatch) {
+    processo = procMatch[0];
+    descricao = descricao.replace(procMatch[0], "").trim();
+  }
 
   // tenta separar autor X réu
   let autor1 = descricao;
@@ -132,6 +144,7 @@ function parseLinha(linha: string): LinhaImport | null {
     autor1,
     reu1,
     reu2,
+    processo,
     tipo,
     valor,
     banco,
@@ -180,7 +193,7 @@ export default function Importar() {
         autor1: l.autor1,
         reu1: l.reu1 || "Processo",
         reu2: l.reu2 || undefined,
-        processo: "",
+        processo: l.processo || "",
         tipo: l.tipo,
         valor: parseFloat(l.valor),
         banco: l.banco as BancoLancamento,
@@ -214,7 +227,7 @@ export default function Importar() {
             Cole os lançamentos (um por linha)
           </h2>
           <p className="text-xs text-slate-500 mb-3 leading-relaxed">
-            Formato: <code className="bg-slate-100 px-1 rounded">data - valor - Autor x Réu (BANCO)</code>. Ex.:
+            Formato: <code className="bg-slate-100 px-1 rounded">data - valor - Autor x Réu Nº-processo (BANCO)</code>. O número de processo é opcional e detectado automaticamente. Ex.:
           </p>
           <pre className="text-[11px] bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3 text-slate-600 overflow-x-auto">{EXEMPLO}</pre>
           <textarea
@@ -255,6 +268,7 @@ export default function Importar() {
                     <th className="text-left py-2 px-1">Data</th>
                     <th className="text-left py-2 px-1">Autor</th>
                     <th className="text-left py-2 px-1">Réu</th>
+                    <th className="text-left py-2 px-1">Processo</th>
                     <th className="text-left py-2 px-1">Tipo</th>
                     <th className="text-left py-2 px-1">Valor</th>
                     <th className="text-left py-2 px-1">Banco</th>
@@ -273,6 +287,9 @@ export default function Importar() {
                       </td>
                       <td className="py-1.5 px-1">
                         <Input value={l.reu1} onChange={(e) => atualizar(i, "reu1", e.target.value)} className="h-8 text-xs min-w-24" />
+                      </td>
+                      <td className="py-1.5 px-1">
+                        <Input value={l.processo} onChange={(e) => atualizar(i, "processo", e.target.value)} placeholder="—" className="h-8 text-xs min-w-32" />
                       </td>
                       <td className="py-1.5 px-1">
                         <Select value={l.tipo} onValueChange={(v) => atualizar(i, "tipo", v)}>
